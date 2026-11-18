@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Byeolmong Unit System</title>
+<meta name="description" content="밤을 지키는 존재를, 네 개의 도형으로. 별몽을 몸·눈·별·꼬리 네 유닛으로 덜어내고, 직접 밤 패턴을 만들어 보는 사이트.">
+<meta property="og:title" content="Byeolmong Unit System">
+<meta property="og:description" content="밤을 지키는 존재를, 네 개의 도형으로.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0b0c11">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230b0c11'/%3E%3Cpath d='M12 3Q13.3 10.7 21 12Q13.3 13.3 12 21Q10.7 13.3 3 12Q10.7 10.7 12 3Z' fill='%237fd3ff'/%3E%3C/svg%3E">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Hahmlet:wght@200..500&display=swap">
+<style>
+/* Layout: 한 장짜리 스크롤 사이트. 히어로(살아있는 워드마크) → 선언문 → 유닛 4장 → 규칙 4장 → 스튜디오 → 맺음.
+   한밤의 단일 룩: 거의 검정 바탕, 흰 도형, 하늘색 한 가지 포인트. */
+:root{
+  --bg:#0b0c11;
+  --bg-2:#12141c;
+  --fg:#eceef3;
+  --muted:#7d8193;
+  --dim:#3a3d4b;
+  --hair:rgba(236,238,243,.11);
+  --accent:#7fd3ff;
+  --f-display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, monospace;
+  --f-serif:"Hahmlet", "Nanum Myeongjo", "AppleMyungjo", serif;
+  --f-kr:"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --gut:max(16px, env(safe-area-inset-left,0px));
+  --gutr:max(16px, env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-kr);font-size:15px;line-height:1.65;word-break:keep-all;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1360px;margin:0 auto;padding-left:var(--gut);padding-right:var(--gutr)}
+@media (min-width:900px){.wrap{padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}}
+.mono{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+button{font:inherit;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:20;padding-top:env(safe-area-inset-top,0px);mix-blend-mode:difference;color:#fff;pointer-events:none}
+.nav .wrap{display:flex;justify-content:space-between;align-items:center;padding-block:18px}
+.nav a,.nav b{pointer-events:auto;text-decoration:none}
+.nav b{font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:14px;letter-spacing:.04em}
+.nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0}
+.nav ul a{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.nav ul a:hover{opacity:1}
+.progress{position:fixed;left:0;top:0;height:2px;background:var(--accent);width:0;z-index:21}
+
+/* ---------- hero ---------- */
+.hero{min-height:100svh;display:grid;grid-template-rows:1fr auto;padding-top:72px;box-sizing:border-box;border-bottom:1px solid var(--hair)}
+.hero-stage{display:grid;align-content:center;gap:28px;padding-block:24px}
+.hero .meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted)}
+canvas.hero-c{display:block;width:100%;height:clamp(200px,40vh,460px);touch-action:pan-y;cursor:crosshair}
+.hero h1{margin:0;font-family:var(--f-serif);font-weight:200;font-size:clamp(26px,4.2vw,58px);line-height:1.25;letter-spacing:-.02em;text-wrap:balance;max-width:16em}
+.hero h1 b{font-weight:500}
+.hero-foot{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;padding-block:22px;color:var(--muted)}
+.hero-foot .hint{display:flex;gap:10px;align-items:center}
+.hero-foot .hint i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.scroll-cue{display:flex;gap:10px;align-items:center}
+.scroll-cue span{display:block;width:1px;height:34px;background:linear-gradient(var(--fg),transparent)}
+
+/* ---------- manifesto ---------- */
+.manifesto{padding-block:clamp(96px,16vw,200px)}
+.manifesto .mono{color:var(--muted);margin-bottom:28px;display:block}
+.manifesto p{margin:0;font-family:var(--f-serif);font-weight:300;font-size:clamp(22px,3.1vw,44px);line-height:1.62;letter-spacing:-.03em;max-width:23em}
+.manifesto p .gap{display:block;height:.9em}
+.manifesto p .last{font-weight:400}
+.manifesto p span{color:var(--dim);transition:color .25s}
+.manifesto p span.on{color:var(--fg)}
+.manifesto p span.hl.on{color:var(--accent)}
+
+/* ---------- marquee ---------- */
+.marquee{border-block:1px solid var(--hair);overflow:hidden;white-space:nowrap;padding-block:18px}
+.marquee .track{display:inline-flex;gap:56px;align-items:center;font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:clamp(40px,8vw,120px);line-height:1;letter-spacing:-.01em;will-change:transform}
+.marquee .track span{display:inline-flex;align-items:center;gap:56px}
+.marquee svg{height:.62em;width:auto;display:block}
+.marquee .o{color:transparent;-webkit-text-stroke:1px var(--fg)}
+
+/* ---------- section heads ---------- */
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px 48px;align-items:end;padding-block:clamp(80px,12vw,160px) clamp(40px,6vw,72px)}
+@media (max-width:860px){.sec-head{grid-template-columns:minmax(0,1fr)}}
+.sec-head .idx{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+.sec-head h2{margin:10px 0 0;font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:clamp(44px,8.5vw,128px);line-height:.9;letter-spacing:-.02em;text-transform:uppercase}
+.sec-head h2 small{display:block;font-family:var(--f-serif);font-weight:200;font-stretch:100%;font-size:clamp(18px,2vw,26px);letter-spacing:-.01em;text-transform:none;margin-top:14px;color:var(--muted)}
+.sec-head p{margin:0;color:var(--muted);font-size:clamp(15px,1.3vw,18px);max-width:34em}
+
+/* ---------- unit chapters ---------- */
+.chapter{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px clamp(32px,5vw,80px);align-items:center;padding-block:clamp(48px,7vw,96px);border-top:1px solid var(--hair)}
+.chapter.flip .plate-box{order:2}
+@media (max-width:860px){.chapter{grid-template-columns:minmax(0,1fr)}.chapter.flip .plate-box{order:0}}
+.plate-box{position:relative;background:var(--bg-2);aspect-ratio:1/1;max-width:100%;overflow:hidden}
+.plate-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:crosshair}
+.plate-box .tag{position:absolute;left:14px;bottom:12px;color:var(--muted);pointer-events:none}
+.plate-box .tag2{position:absolute;right:14px;bottom:12px;color:var(--muted);pointer-events:none;font-variant-numeric:tabular-nums}
+.ch-text{display:grid;gap:22px;align-content:center;min-width:0}
+.ch-num{display:flex;align-items:baseline;gap:16px}
+.ch-num b{font-family:var(--f-display);font-weight:200;font-stretch:62%;font-size:clamp(80px,11vw,170px);line-height:.8;letter-spacing:-.04em}
+.ch-num span{display:grid;gap:4px}
+.ch-num .en{font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:clamp(22px,2.4vw,34px);letter-spacing:.01em;line-height:1}
+.ch-num .kr{color:var(--muted);font-size:14px}
+.ch-text h3{margin:0;font-family:var(--f-serif);font-weight:300;font-size:clamp(24px,2.8vw,40px);line-height:1.3;letter-spacing:-.025em;text-wrap:balance}
+.ch-text p{margin:0;color:#b9bccb;font-size:16px;max-width:30em}
+.spec{display:grid;grid-template-columns:auto 1fr;gap:0;border-top:1px solid var(--hair);margin:0}
+.spec dt,.spec dd{margin:0;padding:11px 0;border-bottom:1px solid var(--hair);font-size:13px}
+.spec dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-right:28px;padding-top:13px}
+.spec dd{color:var(--fg)}
+.spec dd .chip-row{display:flex;gap:6px;flex-wrap:wrap}
+.spec dd .chip-row span{border:1px solid var(--hair);padding:1px 9px;border-radius:99px;font-size:12px}
+.diagram{display:flex;align-items:center;gap:18px;color:var(--fg)}
+.diagram svg{width:120px;height:72px;flex:none;overflow:visible}
+.diagram .cap{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em;line-height:1.7}
+
+/* ---------- rules ---------- */
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)}
+@media (max-width:1100px){.rules{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rule{background:var(--bg);display:grid;grid-template-rows:auto 1fr;min-width:0}
+.rule .plate-box{aspect-ratio:1/1;background:var(--bg)}
+.rule .body{padding:22px 22px 26px;display:grid;gap:10px;align-content:start;border-top:1px solid var(--hair)}
+.rule .lt{display:flex;justify-content:space-between;align-items:baseline}
+.rule .lt b{font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:22px}
+.rule .lt span{color:var(--accent)}
+.rule h3{margin:0;font-family:var(--f-serif);font-size:20px;font-weight:300;letter-spacing:-.03em}
+.rule p{margin:0;color:var(--muted);font-size:14px}
+
+/* ---------- studio ---------- */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;padding-bottom:clamp(80px,10vw,140px)}
+@media (max-width:960px){.studio{grid-template-columns:minmax(0,1fr)}}
+.s-stage{position:relative;background:var(--bg-2);display:grid;place-items:center;padding:clamp(12px,3vw,40px);min-width:0}
+.s-stage canvas{display:block;max-width:100%;touch-action:none;cursor:crosshair;box-shadow:0 40px 80px -40px rgba(0,0,0,.9)}
+.hold{position:absolute;right:14px;top:14px;display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;background:rgba(11,12,17,.85);border:1px solid var(--hair);padding:6px 10px;pointer-events:none}
+.hold i{width:7px;height:7px;background:var(--accent);border-radius:50%}
+.s-hint{position:absolute;left:14px;top:14px;color:var(--muted);pointer-events:none}
+.panel{border:1px solid var(--hair);display:grid}
+.grp{padding:16px 18px;display:grid;gap:10px;border-top:1px solid var(--hair)}
+.grp:first-child{border-top:0}
+.grp > .mono{color:var(--muted);display:flex;justify-content:space-between}
+.grp > .mono b{color:var(--fg);font-weight:400}
+.seg{display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.seg button{background:var(--bg);border:0;padding:9px 6px;cursor:pointer;font-size:12px;color:var(--muted);display:grid;gap:1px;justify-items:center}
+.seg button em{font-style:normal;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.order{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.order .arrow{color:var(--dim);font-size:11px}
+.u-chip{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--hair);padding:4px 8px 4px 5px;cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.u-chip svg{width:16px;height:16px;display:block}
+.u-chip[aria-pressed="false"]{color:var(--muted);border-style:dashed}
+.u-chip[aria-pressed="false"] svg{opacity:.35}
+.u-chip:hover{border-color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.sw-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sw{aspect-ratio:1;border:1px solid var(--hair);cursor:pointer;padding:0;position:relative;max-width:100%}
+.sw i{position:absolute;left:28%;top:28%;width:22%;height:22%;border-radius:50%}
+.sw b{position:absolute;right:22%;bottom:22%;width:16%;height:16%;transform:rotate(45deg)}
+.sw[aria-pressed="true"]{outline:1px solid var(--fg);outline-offset:2px}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.btn{background:none;border:1px solid var(--hair);padding:7px 12px;cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.btn:hover{border-color:var(--fg)}
+.btn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.btn[disabled]{opacity:.35;cursor:default}
+.btn-row .btn{flex:1}
+.note{font-size:12px;color:var(--muted);min-height:18px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--hair);padding-block:56px calc(40px + env(safe-area-inset-bottom,0px))}
+footer .big{font-family:var(--f-display);font-weight:800;font-stretch:125%;font-size:clamp(48px,13vw,220px);line-height:.85;letter-spacing:-.03em;margin:0 0 28px}
+footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted)}
+</style>
+
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<nav class="nav" aria-label="섹션">
+  <div class="wrap">
+    <b>BYEOLMONG</b>
+    <ul><li><a href="#units">Units</a></li><li><a href="#rules">Rules</a></li><li><a href="#studio">Studio</a></li></ul>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="hero">
+  <div class="wrap hero-stage">
+    <div class="meta mono"><span>Byeolmong Unit System</span><span>Vol. 01 — Night Edition</span></div>
+    <canvas class="hero-c" id="heroC" aria-label="네 유닛으로 짠 BYEOLMONG 워드마크. 커서가 닿는 곳이 굵어져요."></canvas>
+    <h1>밤을 지키는 존재를, <b>네 개의 도형</b>으로.</h1>
+  </div>
+  <div class="wrap hero-foot">
+    <span class="hint mono"><i></i>커서를 올리면 글자가 깨어나요</span>
+    <span class="scroll-cue mono"><span></span>Scroll</span>
+  </div>
+</header>
+
+<!-- ============ MANIFESTO ============ -->
+<section class="wrap manifesto" aria-label="선언">
+  <span class="mono">Manifesto — 덜어내는 일</span>
+  <p id="manifesto" data-hl="동그라미|획|별|곡선|별몽이었어요.">잠들기 전, 불을 끄고 누우면 생각은 오히려 또렷해져요. 별몽은 그 긴 밤의 곁을 지키는 아이예요. ¶ 우리는 그 얼굴을 다시 그리는 대신, 하나씩 덜어내 보기로 했어요. 포근한 몸은 동그라미 하나로, 마음을 받아 주던 눈은 작은 획 둘로, 품고 있던 소원은 별 하나로, 말 대신 흔들리던 꼬리는 곡선 하나로. ¶ 그렇게 다 덜어냈는데도, 여전히 별몽이었어요.</p>
+</section>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="track"></div></div>
+
+<!-- ============ UNITS ============ -->
+<section id="units" class="wrap" style="scroll-margin-top:40px">
+  <div class="sec-head">
+    <div><span class="idx">01 — 04 / Units</span><h2>Four<br>Units<small>네 개의 최소단위</small></h2></div>
+    <p>모든 패턴은 이 넷으로만 만들어요. 새 도형을 더하지도, 비율을 바꾸지도 않아요. 움직이는 건 크기와 자리, 방향뿐이에요. 제약이 많을수록 별몽은 더 별몽다워져요.</p>
+  </div>
+
+  <article class="chapter">
+    <div class="plate-box"><canvas id="pBody" aria-label="몸 유닛: 커서가 다가가면 원이 부풀어요"></canvas><span class="tag mono">Plate 01 — Breath</span><span class="tag2 mono" id="pBodyXY"></span></div>
+    <div class="ch-text">
+      <div class="ch-num"><b>01</b><span><span class="en">BODY</span><span class="kr">몸 · 털방울</span></span></div>
+      <h3>포근함은 언제나 둥글다.</h3>
+      <p>밤의 털로 덮인 별몽의 몸에서 모서리를 모두 지웠어요. 남은 건 완전한 원 하나예요. 멀리선 작은 점으로 숨죽이다가, 다가가면 숨을 들이쉬듯 부풀어 서로 맞닿아요.</p>
+      <div class="diagram"><svg viewBox="0 0 120 72" aria-hidden="true"><circle cx="36" cy="36" r="26" fill="currentColor"/><line x1="10" y1="68" x2="62" y2="68" stroke="#7d8193"/><line x1="10" y1="64" x2="10" y2="72" stroke="#7d8193"/><line x1="62" y1="64" x2="62" y2="72" stroke="#7d8193"/><circle cx="96" cy="36" r="5" fill="none" stroke="#7d8193"/><circle cx="96" cy="36" r="14" fill="none" stroke="#3a3d4b" stroke-dasharray="2 3"/></svg><span class="cap">CIRCLE Ø 1.00<br>SCALE 0.24 → 1.00<br>NO CORNERS</span></div>
+      <dl class="spec"><dt>From</dt><dd>밤의 털 질감, 살짝 부푼 볼륨</dd><dt>Means</dt><dd><span class="chip-row"><span>포근함</span><span>숨</span><span>곁에 있음</span></span></dd><dt>Moves</dt><dd>거리만큼 부풀기</dd></dl>
+    </div>
+  </article>
+
+  <article class="chapter flip">
+    <div class="plate-box"><canvas id="pEye" aria-label="눈 유닛: 다가가면 눈을 뜨고 커서를 바라봐요"></canvas><span class="tag mono">Plate 02 — Gaze</span><span class="tag2 mono" id="pEyeXY"></span></div>
+    <div class="ch-text">
+      <div class="ch-num"><b>02</b><span><span class="en">EYE</span><span class="kr">눈 · 2D</span></span></div>
+      <h3>가장 작은 것이, 가장 많이 말한다.</h3>
+      <p>루미아 친구들 중 별몽만 손으로 그린 2D 눈을 가졌어요. 감정과 소원을 받아들이는 창이라서요. 그 세로 타원을 1 : 1.8 알약으로 옮겼어요. 멀리선 감긴 점, 다가가면 눈을 뜨고 나를 봐요.</p>
+      <div class="diagram"><svg viewBox="0 0 120 72" aria-hidden="true"><rect x="22" y="8" width="16" height="29" rx="8" fill="currentColor"/><rect x="44" y="8" width="16" height="29" rx="8" fill="currentColor"/><line x1="70" y1="8" x2="70" y2="37" stroke="#7d8193"/><line x1="66" y1="8" x2="74" y2="8" stroke="#7d8193"/><line x1="66" y1="37" x2="74" y2="37" stroke="#7d8193"/><rect x="22" y="56" width="16" height="6" rx="3" fill="#3a3d4b"/><rect x="44" y="56" width="16" height="6" rx="3" fill="#3a3d4b"/><text x="80" y="27" fill="#7d8193" font-size="9" font-family="IBM Plex Mono">1.8</text></svg><span class="cap">PILL 1 : 1.8<br>CLOSED → OPEN<br>LOOKS AT YOU</span></div>
+      <dl class="spec"><dt>From</dt><dd>손그림 2D 눈, 감정을 받아들이는 창</dd><dt>Means</dt><dd><span class="chip-row"><span>시선</span><span>공감</span><span>받아들임</span></span></dd><dt>Moves</dt><dd>눈 뜨기, 바라보기</dd></dl>
+    </div>
+  </article>
+
+  <article class="chapter">
+    <div class="plate-box"><canvas id="pStar" aria-label="별 유닛: 커서가 지나간 자리의 별이 밝아지고 이어져요"></canvas><span class="tag mono">Plate 03 — Spark</span><span class="tag2 mono" id="pStarXY"></span></div>
+    <div class="ch-text">
+      <div class="ch-num"><b>03</b><span><span class="en">STAR</span><span class="kr">별 · 가슴의 소원</span></span></div>
+      <h3>소원은 오목하게 빛난다.</h3>
+      <p>가슴의 별은 별몽이 모아 온 소원이에요. 네 꼭지를 안으로 당겨 허리를 0.14만 남겼어요. 별몽이 지나간 자리의 소원이 밝아지고, 밝은 소원끼리 가는 선으로 이어져 잠깐의 별자리가 돼요.</p>
+      <div class="diagram"><svg viewBox="0 0 120 72" aria-hidden="true"><path d="M40 6Q44.2 31.8 70 36Q44.2 40.2 40 66Q35.8 40.2 10 36Q35.8 31.8 40 6Z" fill="currentColor"/><circle cx="40" cy="36" r="4.2" fill="none" stroke="#7fd3ff"/><line x1="46" y1="36" x2="88" y2="36" stroke="#7d8193" stroke-dasharray="2 3"/><text x="90" y="39" fill="#7d8193" font-size="9" font-family="IBM Plex Mono">0.14</text></svg><span class="cap">4-POINT CONCAVE<br>WAIST 0.14<br>LINKS WHEN BRIGHT</span></div>
+      <dl class="spec"><dt>From</dt><dd>가슴의 별, 맡겨진 소원</dd><dt>Means</dt><dd><span class="chip-row"><span>소원</span><span>빛</span><span>연결</span></span></dd><dt>Moves</dt><dd>밝아지기, 별자리 잇기</dd></dl>
+    </div>
+  </article>
+
+  <article class="chapter flip">
+    <div class="plate-box"><canvas id="pTail" aria-label="꼬리 유닛: 커서 위치에 따라 궤도가 돌고 호가 길어져요"></canvas><span class="tag mono">Plate 04 — Orbit</span><span class="tag2 mono" id="pTailXY"></span></div>
+    <div class="ch-text">
+      <div class="ch-num"><b>04</b><span><span class="en">TAIL</span><span class="kr">꼬리 · 마음의 신호</span></span></div>
+      <h3>마음은 곡선으로 흔들린다.</h3>
+      <p>꼬리는 말 대신 마음을 보여 주는 신호예요. 기쁠 때 흔들리고, 마음을 살필 때 은은히 빛나요. 별빛이 흘러내리는 곡선을 1/4 원호 하나로 줄였어요. 마음이 클수록 호가 길어지고, 마음이 닿은 궤도만 빛나요.</p>
+      <div class="diagram"><svg viewBox="0 0 120 72" aria-hidden="true"><path d="M12 64A52 52 0 0 1 64 12" fill="none" stroke="currentColor" stroke-width="12.5" stroke-linecap="round"/><circle cx="64" cy="64" r="2" fill="#7d8193"/><line x1="64" y1="64" x2="64" y2="12" stroke="#3a3d4b" stroke-dasharray="2 3"/><text x="74" y="44" fill="#7d8193" font-size="9" font-family="IBM Plex Mono">r · 0.24</text></svg><span class="cap">QUARTER ARC<br>STROKE 0.24 r<br>ROUND CAPS</span></div>
+      <dl class="spec"><dt>From</dt><dd>별빛이 흘러내리는 꼬리</dd><dt>Means</dt><dd><span class="chip-row"><span>감정</span><span>신호</span><span>흔들림</span></span></dd><dt>Moves</dt><dd>궤도 돌기, 호 늘이기</dd></dl>
+    </div>
+  </article>
+</section>
+
+<!-- ============ RULES ============ -->
+<section id="rules" class="wrap" style="scroll-margin-top:40px">
+  <div class="sec-head">
+    <div><span class="idx">A — D / Rules</span><h2>Four<br>Rules<small>만났을 때의 규칙</small></h2></div>
+    <p>유닛은 혼자일 때보다 함께일 때 이야기가 돼요. 한 격자 위에 넷을 모으면, 칸마다 하나만 깨어나요. 어느 유닛이 깨어날지는 아래 네 가지 규칙이 정해요. 가까운 쪽부터 몸, 눈, 꼬리, 별 순서예요.</p>
+  </div>
+  <div class="rules" id="rulesGrid"></div>
+</section>
+
+<!-- ============ STUDIO ============ -->
+<section id="studio" class="wrap" style="scroll-margin-top:40px">
+  <div class="sec-head">
+    <div><span class="idx">05 / Studio</span><h2>Make a<br>Night<small>나만의 밤 패턴 만들기</small></h2></div>
+    <p>이제 직접 짜 볼 차례예요. 규칙을 고르고, 유닛의 순서를 바꾸고, 빼고 싶은 유닛은 꺼 보세요. 마음에 드는 순간 판을 클릭하면 그 장면에서 멈춰요. 멈춘 그대로 PNG나 SVG로 저장할 수 있어요.</p>
+  </div>
+  <div class="studio">
+    <div class="s-stage" id="sStage">
+      <canvas id="sC" aria-label="패턴 스튜디오 판"></canvas>
+      <span class="s-hint mono" id="sHint">Click to hold</span>
+      <div class="hold mono" id="hold" hidden><i></i>Hold — 다시 클릭하면 움직여요</div>
+    </div>
+    <div class="panel">
+      <div class="grp"><span class="mono">Rule</span><div class="seg" id="sRule" style="grid-template-columns:repeat(4,1fr)"></div></div>
+      <div class="grp"><span class="mono">Order <b>Near → Far</b></span><div class="order" id="sOrder"></div><div class="btn-row"><button class="btn" id="sRot">↻ Rotate</button><button class="btn" id="sRev">⇄ Reverse</button></div></div>
+      <div class="grp"><label class="mono" for="sGrid">Grid <b id="sGridV"></b></label><input type="range" id="sGrid" min="8" max="48" step="2"></div>
+      <div class="grp"><span class="mono">Palette</span><div class="sw-row" id="sPal"></div><div class="btn-row"><button class="btn" id="sStar" aria-pressed="true">Star Accent</button><button class="btn" id="sSeed">Seed</button></div></div>
+      <div class="grp"><span class="mono">Format</span><div class="seg" id="sRatio" style="grid-template-columns:repeat(3,1fr)"></div></div>
+      <div class="grp"><div class="btn-row"><button class="btn" id="sHold" aria-pressed="false">Hold</button><button class="btn primary" id="sPng">PNG</button><button class="btn" id="sSvg">SVG</button></div><span class="note" id="sNote"></span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="big">GOOD<br>NIGHT.</p>
+    <div class="row mono"><span>Byeolmong Unit System — Vol. 01</span><span>Body · Eye · Star · Tail</span><span>Made for the hours before sleep</span></div>
+  </div>
+</footer>
+
+<script>
+(()=>{
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR=Math.min(2,window.devicePixelRatio||1);
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+const frac=v=>v-Math.floor(v);
+const EYE_RATIO=1.8,STAR_WAIST=.14,TAIL_W=.24;
+const SITE={bg:'#0b0c11',bg2:'#12141c',fg:'#eceef3',muted:'#3a3d4b',accent:'#7fd3ff'};
+
+/* ================= 출력기 ================= */
+function canvasOut(g){return{
+  circle(x,y,r,c){if(r<=0)return;g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();},
+  pill(x,y,w,h,rot,c){h=Math.max(h,w);const r=w/2;g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=c;g.beginPath();g.arc(0,-h/2+r,r,Math.PI,0);g.arc(0,h/2-r,r,0,Math.PI);g.closePath();g.fill();g.restore();},
+  spark(x,y,r,rot,c){g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=c;g.beginPath();const k=r*STAR_WAIST;
+    g.moveTo(0,-r);g.quadraticCurveTo(k,-k,r,0);g.quadraticCurveTo(k,k,0,r);g.quadraticCurveTo(-k,k,-r,0);g.quadraticCurveTo(-k,-k,0,-r);g.fill();g.restore();},
+  arc(x,y,r,a0,a1,w,c){g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.arc(x,y,Math.max(0,r),a0,a1);g.stroke();},
+  line(x1,y1,x2,y2,w,c,cap='round'){g.strokeStyle=c;g.lineWidth=w;g.lineCap=cap;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();}
+};}
+function svgOut(){const P=[];const f=v=>+v.toFixed(2);return{P,
+  circle(x,y,r,c){if(r>0)P.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${c}"/>`);},
+  pill(x,y,w,h,rot,c){h=Math.max(h,w);P.push(`<rect x="${f(-w/2)}" y="${f(-h/2)}" width="${f(w)}" height="${f(h)}" rx="${f(w/2)}" fill="${c}" transform="translate(${f(x)} ${f(y)}) rotate(${f(rot*180/Math.PI)})"/>`);},
+  spark(x,y,r,rot,c){const k=r*STAR_WAIST;P.push(`<path d="M0 ${f(-r)}Q${f(k)} ${f(-k)} ${f(r)} 0Q${f(k)} ${f(k)} 0 ${f(r)}Q${f(-k)} ${f(k)} ${f(-r)} 0Q${f(-k)} ${f(-k)} 0 ${f(-r)}Z" fill="${c}" transform="translate(${f(x)} ${f(y)}) rotate(${f(rot*180/Math.PI)})"/>`);},
+  arc(x,y,r,a0,a1,w,c){const sx=x+Math.cos(a0)*r,sy=y+Math.sin(a0)*r,ex=x+Math.cos(a1)*r,ey=y+Math.sin(a1)*r;
+    P.push(`<path d="M${f(sx)} ${f(sy)}A${f(r)} ${f(r)} 0 0 1 ${f(ex)} ${f(ey)}" fill="none" stroke="${c}" stroke-width="${f(w)}" stroke-linecap="round"/>`);},
+  line(x1,y1,x2,y2,w,c,cap='round'){P.push(`<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${c}" stroke-width="${f(w)}" stroke-linecap="${cap}"/>`);}
+};}
+
+/* ================= 노이즈 ================= */
+function hash(x,y,s){let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Math.imul(s|0,1442695041);h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return (h>>>0)/4294967295;}
+function noise(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash(xi,yi,s),b=hash(xi+1,yi,s),c=hash(xi,yi+1,s),d=hash(xi+1,yi+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
+const fbm=(x,y,s)=>noise(x,y,s)*.65+noise(x*2.1,y*2.1,s+7)*.35;
+
+/* ================= 플레이트 엔진 =================
+   커서가 없으면 멈춰 있고, 커서가 올라오면 그때만 움직여요. */
+function plate(cv,paint,opt={}){
+  const g=cv.getContext('2d');
+  const p={W:1,H:1,target:null,cur:null,rest:opt.rest||[.5,.5],t:0,raf:0,last:0,hold:false};
+  p.colors=opt.colors||(()=>({bg:opt.bg||SITE.bg2,fg:SITE.fg,muted:SITE.muted,accent:SITE.accent}));
+  p.draw=()=>{g.setTransform(DPR,0,0,DPR,0,0);const C=p.colors();g.fillStyle=C.bg;g.fillRect(0,0,p.W,p.H);paint(canvasOut(g),p.W,p.H,p.cur,C,p.t);opt.onDraw&&opt.onDraw(p);};
+  p.fit=()=>{const r=cv.getBoundingClientRect();if(r.width<2)return;p.W=r.width;p.H=r.height;cv.width=Math.round(p.W*DPR);cv.height=Math.round(p.H*DPR);
+    if(!p.target)p.cur={x:p.rest[0]*p.W,y:p.rest[1]*p.H};p.draw();};
+  const tick=ts=>{const dt=p.last?Math.min(100,ts-p.last):0;p.last=ts;
+    const tg=p.target||{x:p.rest[0]*p.W,y:p.rest[1]*p.H};if(p.target)p.t+=dt;
+    const k=reduce?1:.15;p.cur.x+=(tg.x-p.cur.x)*k;p.cur.y+=(tg.y-p.cur.y)*k;p.draw();
+    if(!p.target&&Math.hypot(tg.x-p.cur.x,tg.y-p.cur.y)<.3){p.raf=0;p.last=0;return;}
+    p.raf=requestAnimationFrame(tick);};
+  p.wake=()=>{if(!p.raf){p.last=0;p.raf=requestAnimationFrame(tick);}};
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  p.release=()=>{if(p.hold||!p.target)return;p.rest=[clamp(p.target.x/p.W,0,1),clamp(p.target.y/p.H,0,1)];p.target=null;p.wake();};
+  p.setHold=on=>{p.hold=on;if(on){p.rest=[p.cur.x/p.W,p.cur.y/p.H];p.target=null;}opt.onHold&&opt.onHold(on);};
+  const area=opt.area||cv;
+  area.addEventListener('pointermove',e=>{if(p.hold)return;if(e.pointerType!=='mouse'&&e.buttons===0)return;p.target=pos(e);p.wake();});
+  area.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(opt.clickHold&&e.pointerType==='mouse'){if(p.hold){p.setHold(false);p.target=pos(e);p.wake();}else p.setHold(true);return;}
+    if(p.hold)p.setHold(false);p.target=pos(e);p.wake();});
+  area.addEventListener('pointerleave',p.release);
+  area.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')p.release();});
+  area.addEventListener('pointercancel',p.release);
+  new ResizeObserver(p.fit).observe(cv);
+  return p;
+}
+
+/* ================= 유닛 플레이트 ================= */
+function grid(W,H,cols){const cell=W/cols,rows=Math.max(1,Math.floor(H/cell)),oy=(H-rows*cell)/2;return{cell,rows,oy};}
+function plateBreath(o,W,H,c,C){
+  const cols=12,{cell,rows,oy}=grid(W,H,cols),R=W*.55;
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const x=(i+.5)*cell,y=oy+(j+.5)*cell,k=Math.pow(1-smooth(0,R,Math.hypot(c.x-x,c.y-y)),1.4);
+    o.circle(x,y,cell*(.12+.38*k),C.fg);}
+}
+function plateGaze(o,W,H,c,C){
+  const cols=10,{cell,rows,oy}=grid(W,H,cols),R=W*.6;let best=-1,bd=1e9;
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const d=Math.hypot(c.x-(i+.5)*cell,c.y-(oy+(j+.5)*cell));if(d<bd){bd=d;best=j*cols+i;}}
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const x=(i+.5)*cell,y=oy+(j+.5)*cell,vx=c.x-x,vy=c.y-y,d=Math.hypot(vx,vy)||1;
+    const open=Math.pow(1-smooth(0,R,d),1.6),w=cell*.105,h=w+cell*.3*open,gv=Math.min(1,d/(cell*1.5))*cell*.06*(.3+.7*open),gx=vx/d*gv,gy=vy/d*gv;
+    let col=C.fg;if(j*cols+i===best){o.circle(x,y,cell*.42,C.fg);col=C.bg;}
+    o.pill(x-cell*.13+gx,y+gy,w,h,0,col);o.pill(x+cell*.13+gx,y+gy,w,h,0,col);}
+}
+function plateSpark(o,W,H,c,C,t){
+  const cols=16,{cell,rows,oy}=grid(W,H,cols),R=cell*5,tt=reduce?0:t*.00006,v=new Float32Array(cols*rows),P=(i,j)=>[(i+.5)*cell,oy+(j+.5)*cell];
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const [x,y]=P(i,j),n=noise(i*.32+tt,j*.32-tt*.6,5);v[j*cols+i]=.12+.5*n*n+.85*(1-smooth(0,R,Math.hypot(c.x-x,c.y-y)));}
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=v[j*cols+i];if(a<.72)continue;const [x,y]=P(i,j);
+    for(const [di,dj] of [[1,0],[0,1],[1,1]]){const I=i+di,J=j+dj;if(I>=cols||J>=rows)continue;const b=v[J*cols+I];if(b<.72)continue;const [x2,y2]=P(I,J);o.line(x,y,x2,y2,1,(a+b)/2>1?C.accent:C.muted,'butt');}}
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=v[j*cols+i],[x,y]=P(i,j);o.spark(x,y,cell*.5*Math.min(1.25,a),0,a>1.02?C.accent:C.fg);}
+}
+function plateOrbit(o,W,H,c,C){
+  const cx=W/2,cy=H/2,maxR=Math.hypot(W,H)/2,n=11,step=maxR/n,ca=Math.atan2(c.y-cy,c.x-cx),cdist=Math.hypot(c.x-cx,c.y-cy),cd=clamp(cdist/(Math.min(W,H)/2),0,1);
+  const sweep=Math.PI*(.18+.82*cd),active=Math.round(cdist/step);
+  for(let k=1;k<=n;k++){const r=k*step,m=Math.max(4,Math.round(Math.PI*2*r/(step*1.15))),dir=k%2?1:-1,col=k===active?C.accent:C.fg,rot=ca*dir*(.25+.75*k/n);
+    for(let q=0;q<m;q++){const a=q/m*Math.PI*2,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(x<-step||y<-step||x>W+step||y>H+step)continue;
+      o.arc(x,y,step*.36,a+rot,a+rot+sweep,step*.36*TAIL_W,col);}}
+  o.circle(cx,cy,step*.42,C.fg);
+}
+
+/* ================= 히어로: 5×7 모듈 워드마크 ================= */
+const FONT={B:"####.|#...#|#...#|####.|#...#|#...#|####.",Y:"#...#|#...#|.#.#.|..#..|..#..|..#..|..#..",E:"#####|#....|#....|####.|#....|#....|#####",
+  O:".###.|#...#|#...#|#...#|#...#|#...#|.###.",L:"#....|#....|#....|#....|#....|#....|#####",M:"#...#|##.##|#.#.#|#.#.#|#...#|#...#|#...#",
+  N:"#...#|#...#|##..#|#.#.#|#..##|#...#|#...#",G:".###.|#...#|#....|#.###|#...#|#...#|.###."};
+for(const k in FONT)FONT[k]=FONT[k].split('|');
+function plateWord(o,W,H,c,C){
+  const lines=W<760?['BYEOL','MONG*']:['BYEOLMONG*'],maxLen=Math.max(...lines.map(l=>l.length)),cols=maxLen*6-1,rows=lines.length*9-2;
+  const cell=Math.min(W/cols,H/rows),ox=(W-cols*cell)/2,oy=(H-rows*cell)/2,R=cell*11;
+  const filled=new Map(),stars=[];
+  lines.forEach((l,li)=>{const lo=(maxLen-l.length)*3;[...l].forEach((ch,ci)=>{const gx0=lo+ci*6,gy0=li*9;
+    if(ch==='*'){stars.push([gx0+2,gy0+3]);return;}FONT[ch].forEach((row,ry)=>[...row].forEach((v,rx)=>{if(v==='#')filled.set((gy0+ry)*1000+gx0+rx,[gx0+rx,gy0+ry]);}));});});
+  const P=(gx,gy)=>[ox+(gx+.5)*cell,oy+(gy+.5)*cell],near=(x,y)=>1-smooth(0,R,Math.hypot(c.x-x,c.y-y)),col=(x,y)=>Math.hypot(c.x-x,c.y-y)<R*.22?C.accent:C.fg;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const [px,py]=P(x,y);o.circle(px,py,Math.max(.7,cell*.04),C.muted);}
+  for(const [gx,gy] of filled.values()){const [x,y]=P(gx,gy),k=near(x,y),w=cell*(.26+.62*k);let solo=true;
+    for(const [dx,dy] of [[1,0],[0,1],[1,1],[-1,1]]){if(!filled.has((gy+dy)*1000+gx+dx))continue;if(dx&&dy&&(filled.has(gy*1000+gx+dx)||filled.has((gy+dy)*1000+gx)))continue;
+      const [x2,y2]=P(gx+dx,gy+dy);o.line(x,y,x2,y2,w,col((x+x2)/2,(y+y2)/2));solo=false;}
+    if(solo&&![[-1,0],[0,-1],[-1,-1],[1,-1]].some(([dx,dy])=>filled.has((gy+dy)*1000+gx+dx)))o.circle(x,y,w/2,col(x,y));}
+  for(const [gx,gy] of stars){const [x,y]=P(gx,gy);o.spark(x,y,cell*2.6,near(x,y)*Math.PI/4,C.accent);}
+}
+
+/* ================= 컴포지션 (규칙) ================= */
+function drawUnit(o,u,x,y,cell,sz,ang,dist,local,C,starAccent){
+  if(u==='body'){o.circle(x,y,cell*.36*sz,C.fg);return;}
+  if(u==='eye'){const gv=Math.min(1,dist/(cell*1.4))*cell*.05,gx=Math.cos(ang)*gv,gy=Math.sin(ang)*gv,w=cell*.12*sz;
+    o.pill(x-cell*.12*sz+gx,y+gy,w,w*EYE_RATIO,0,C.fg);o.pill(x+cell*.12*sz+gx,y+gy,w,w*EYE_RATIO,0,C.fg);return;}
+  if(u==='tail'){const r=cell*.4*sz,cx=x-Math.cos(ang)*r*.62,cy=y-Math.sin(ang)*r*.62;o.arc(cx,cy,r,ang-Math.PI/4,ang+Math.PI/4,r*TAIL_W,C.fg);return;}
+  o.spark(x,y,cell*.42*sz,local*Math.PI/4,starAccent?C.accent:C.fg);
+}
+function compose(o,W,H,c,C,t,cfg){
+  const units=cfg.order.filter(u=>!cfg.off[u]),n=units.length;if(!n)return;
+  const {cell,rows,oy}=grid(W,H,cfg.cols),cols=cfg.cols,diag=Math.hypot(W,H);
+  const foci=cfg.rule==='mirror'?[[c.x,c.y],[W-c.x,c.y],[c.x,H-c.y],[W-c.x,H-c.y]]:[[c.x,c.y]];
+  const tt=reduce?0:t*.00004,slope=Math.round((c.y/H-.5)*4),phase=c.x/W;
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+    const x=(i+.5)*cell,y=oy+(j+.5)*cell;let fx=foci[0][0],fy=foci[0][1],d=Math.hypot(fx-x,fy-y);
+    for(let k=1;k<foci.length;k++){const dd=Math.hypot(foci[k][0]-x,foci[k][1]-y);if(dd<d){d=dd;fx=foci[k][0];fy=foci[k][1];}}
+    let f;
+    if(cfg.rule==='radar')f=d/(diag*.62);
+    else if(cfg.rule==='mirror')f=d/(diag*.34);
+    else if(cfg.rule==='field'){const nz=clamp((fbm(x/(W/6)+tt,y/(W/6)-tt*.7,cfg.seed)-.22)/.56,0,1);f=nz*(.25+.75*smooth(0,diag*.3,d));}
+    else f=frac((i+slope*j)/(n*2.5)+phase);
+    f=clamp(f,0,.9999);const band=f*n,idx=Math.floor(band),local=band-idx;
+    drawUnit(o,units[idx],x,y,cell,.56+.44*Math.sin(Math.PI*local),Math.atan2(fy-y,fx-x),d,local,C,cfg.starAccent);
+  }
+}
+const RULES=[
+  {id:'radar',no:'A',en:'Radar',kr:'거리',h:'다가가는 만큼만 보여요.',p:'커서와의 거리로 층이 나뉘어요. 멀리선 소원의 별빛만 보이다가, 다가갈수록 꼬리와 눈이, 마주한 자리에선 별몽의 몸이 드러나요.',rest:[.38,.42]},
+  {id:'field',no:'B',en:'Field',kr:'꿈결',h:'경계는 꿈처럼 흘러요.',p:'꿈과 현실의 경계에 머무는 별몽처럼, 층의 경계가 반듯하지 않고 일렁여요. 커서가 머무는 동안 꿈결이 천천히 흘러가고, 커서 둘레는 꿈결이 걷혀요.',rest:[.6,.55]},
+  {id:'seq',no:'C',en:'Sequence',kr:'리듬',h:'밤에도 박자가 있어요.',p:'잠들기 전의 숨, 자장가의 반복이에요. 네 유닛이 한 박자씩 돌아가는 띠예요. 커서의 가로 위치는 박자를, 세로 위치는 띠의 기울기를 바꿔요.',rest:[.3,.78]},
+  {id:'mirror',no:'D',en:'Mirror',kr:'대칭',h:'하나의 손짓, 네 개의 별자리.',p:'꼬리들이 모이면 빛이 이어져 하나의 밤하늘이 된다는 설정이에요. 커서 하나가 네 귀퉁이에 비쳐, 한 번의 움직임이 하나의 문양이 돼요.',rest:[.3,.3]}
+];
+const UNIT_ICON={
+  body:'<circle cx="12" cy="12" r="7" fill="currentColor"/>',
+  eye:'<rect x="6.6" y="8" width="4" height="7.2" rx="2" fill="currentColor"/><rect x="13.4" y="8" width="4" height="7.2" rx="2" fill="currentColor"/>',
+  tail:'<path d="M6 18A12 12 0 0 1 18 6" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round"/>',
+  star:'<path d="M12 3Q13.3 10.7 21 12Q13.3 13.3 12 21Q10.7 13.3 3 12Q10.7 10.7 12 3Z" fill="currentColor"/>'
+};
+const UNIT_NAME={body:'Body',eye:'Eye',tail:'Tail',star:'Star'};
+
+/* ================= 페이지 조립 ================= */
+// 히어로
+plate($('heroC'),plateWord,{rest:[.22,.5],area:$('hero'),bg:SITE.bg});
+// 유닛 플레이트
+const xy=id=>p=>{$(id).textContent=`${(p.cur.x/p.W).toFixed(2)} , ${(p.cur.y/p.H).toFixed(2)}`;};
+plate($('pBody'),plateBreath,{rest:[.32,.36],onDraw:xy('pBodyXY')});
+plate($('pEye'),plateGaze,{rest:[.62,.44],onDraw:xy('pEyeXY')});
+plate($('pStar'),plateSpark,{rest:[.42,.58],onDraw:xy('pStarXY')});
+plate($('pTail'),plateOrbit,{rest:[.74,.26],onDraw:xy('pTailXY')});
+// 규칙 카드
+RULES.forEach(r=>{
+  const el=document.createElement('article');el.className='rule';
+  el.innerHTML=`<div class="plate-box"><canvas aria-label="${r.en} 규칙 미리보기"></canvas><span class="tag mono">Rule ${r.no}</span></div>
+    <div class="body"><div class="lt"><b>${r.en}</b><span class="mono">${r.no} · ${r.kr}</span></div><h3>${r.h}</h3><p>${r.p}</p></div>`;
+  $('rulesGrid').appendChild(el);
+  const cfg={rule:r.id,order:['body','eye','tail','star'],off:{},cols:13,seed:11,starAccent:true};
+  plate(el.querySelector('canvas'),(o,W,H,c,C,t)=>compose(o,W,H,c,C,t,cfg),{rest:r.rest,bg:SITE.bg});
+});
+
+// 선언문: 스크롤에 따라 단어가 켜져요
+(()=>{const el=$('manifesto'),hl=el.dataset.hl.split('|');const words=el.textContent.split(' ');
+  el.innerHTML=words.map(w=>w==='¶'?'<i class="gap"></i>':`<span class="${hl.includes(w)?'hl':''}">${w}</span>`).join(' ');
+  const gaps=[...el.querySelectorAll('.gap')];if(gaps.length){let n=gaps[gaps.length-1].nextElementSibling;while(n){n.classList.add('last');n=n.nextElementSibling;}}
+  const spans=[...el.querySelectorAll('span')];
+  const upd=()=>{const r=el.getBoundingClientRect(),vh=innerHeight,p=clamp((vh*.85-r.top)/(r.height+vh*.35),0,1),n=Math.round(p*spans.length);
+    spans.forEach((s,i)=>s.classList.toggle('on',i<n));};
+  if(reduce)spans.forEach(s=>s.classList.add('on'));else{addEventListener('scroll',upd,{passive:true});upd();}
+})();
+// 마키: 스크롤만큼만 흘러요
+(()=>{const items=[['BODY','body'],['EYE','eye'],['STAR','star'],['TAIL','tail']];
+  const one=items.map(([t,u],k)=>`<span><b class="${k%2?'o':''}">${t}</b><svg viewBox="0 0 24 24">${UNIT_ICON[u].replace(/currentColor/g,u==='star'?'#7fd3ff':'#eceef3')}</svg></span>`).join('');
+  $('track').innerHTML=one+one+one;
+  const tr=$('track'),upd=()=>{tr.style.transform=`translateX(${-(scrollY*.35)%(tr.scrollWidth/3)}px)`;};
+  if(!reduce){addEventListener('scroll',upd,{passive:true});}upd();
+})();
+// 진행 막대
+addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-innerHeight;$('progress').style.width=(h>0?scrollY/h*100:0)+'%';},{passive:true});
+
+/* ================= 스튜디오 ================= */
+const PAL=[{id:'night',name:'Night',bg:'#0b0c11',fg:'#eceef3',accent:'#7fd3ff'},{id:'paper',name:'Paper',bg:'#eceef3',fg:'#0b0c11',accent:'#1d8fe6'},
+  {id:'sky',name:'Sky',bg:'#a6e3ff',fg:'#0b1026',accent:'#ffffff'},{id:'dusk',name:'Dusk',bg:'#1b1f4b',fg:'#f3e9d2',accent:'#ffcf6b'}];
+const RATIOS=[['45','4 : 5',1.25],['11','1 : 1',1],['169','16 : 9',.5625]];
+const ST={rule:'radar',order:['body','eye','tail','star'],off:{},cols:24,seed:11,starAccent:true,pal:'night',ratio:'45'};
+const pal=()=>PAL.find(p=>p.id===ST.pal);
+const sc=$('sC');
+const sp=plate(sc,(o,W,H,c,C,t)=>compose(o,W,H,c,C,t,ST),{rest:[.6,.4],clickHold:true,colors:()=>({...pal(),muted:pal().fg}),
+  onHold:on=>{$('hold').hidden=!on;$('sHint').hidden=on;$('sHold').setAttribute('aria-pressed',on);$('sHold').textContent=on?'Release':'Hold';}});
+function sizeStudio(){const st=$('sStage'),pad=parseFloat(getComputedStyle(st).paddingLeft)*2,ar=RATIOS.find(r=>r[0]===ST.ratio)[2];
+  let w=st.clientWidth-pad,h=w*ar;const mh=Math.max(320,innerHeight*.78);if(h>mh){h=mh;w=h/ar;}sc.style.width=Math.floor(w)+'px';sc.style.height=Math.floor(h)+'px';}
+new ResizeObserver(sizeStudio).observe($('sStage'));
+RULES.forEach(r=>{const b=document.createElement('button');b.dataset.v=r.id;b.innerHTML=`<em>${r.no}</em>${r.kr}`;b.setAttribute('aria-label',`${r.en} ${r.kr}`);b.onclick=()=>{ST.rule=r.id;syncS();};$('sRule').appendChild(b);});
+RATIOS.forEach(([v,l])=>{const b=document.createElement('button');b.dataset.v=v;b.textContent=l;b.onclick=()=>{ST.ratio=v;syncS();sizeStudio();};$('sRatio').appendChild(b);});
+PAL.forEach(p=>{const b=document.createElement('button');b.className='sw';b.dataset.v=p.id;b.setAttribute('aria-label',p.name+' 팔레트');b.style.background=p.bg;
+  b.innerHTML=`<i style="background:${p.fg}"></i><b style="background:${p.accent}"></b>`;b.onclick=()=>{ST.pal=p.id;syncS();};$('sPal').appendChild(b);});
+function renderOrder(){const box=$('sOrder');box.innerHTML='';
+  ST.order.forEach((u,k)=>{if(k)box.insertAdjacentHTML('beforeend','<span class="arrow">→</span>');
+    const b=document.createElement('button');b.className='u-chip';b.setAttribute('aria-pressed',!ST.off[u]);b.setAttribute('aria-label',`${UNIT_NAME[u]} 켜고 끄기`);
+    b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${UNIT_ICON[u]}</svg>${UNIT_NAME[u]}`;
+    b.onclick=()=>{if(!ST.off[u]&&ST.order.filter(x=>!ST.off[x]).length<=1)return;ST.off[u]=!ST.off[u];renderOrder();sp.draw();};box.appendChild(b);});}
+$('sRot').onclick=()=>{ST.order.push(ST.order.shift());renderOrder();sp.draw();};
+$('sRev').onclick=()=>{ST.order.reverse();renderOrder();sp.draw();};
+$('sGrid').oninput=e=>{ST.cols=+e.target.value;syncS();};
+$('sStar').onclick=()=>{ST.starAccent=!ST.starAccent;syncS();};
+$('sSeed').onclick=()=>{ST.seed=(Math.random()*1e5)|0;sp.draw();};
+$('sHold').onclick=()=>{sp.setHold(!sp.hold);};
+function syncS(){
+  $('sRule').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===ST.rule));
+  $('sRatio').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===ST.ratio));
+  $('sPal').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===ST.pal));
+  $('sGrid').value=ST.cols;$('sGridV').textContent=ST.cols;$('sStar').setAttribute('aria-pressed',ST.starAccent);$('sSeed').disabled=ST.rule!=='field';
+  if(sp.cur)sp.draw();
+}
+addEventListener('keydown',e=>{if(e.key!==' '||e.target.closest('button,input'))return;const r=$('studio').getBoundingClientRect();if(r.top<innerHeight*.6&&r.bottom>innerHeight*.4){e.preventDefault();sp.setHold(!sp.hold);}});
+
+// 내보내기
+let dl=null;
+const stamp=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`;};
+const fname=ext=>`byeolmong-${ST.rule}-${ST.pal}-${stamp()}.${ext}`;
+function plainSave(name,data){const blob=data instanceof Blob?data:new Blob([data],{type:'image/svg+xml'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);$('sNote').textContent='저장했어요.';}
+async function save(name,data){if(!dl){plainSave(name,data);return;}try{await dl.save({filename:name,data});$('sNote').textContent='저장했어요.';}catch(e){$('sNote').textContent=e&&e.code==='declined'?'':'저장하지 못했어요. 잠시 뒤 다시 해 주세요.';}}
+$('sPng').onclick=async()=>{const s=2400/Math.max(sp.W,sp.H),c=document.createElement('canvas');c.width=Math.round(sp.W*s);c.height=Math.round(sp.H*s);const g=c.getContext('2d');
+  g.setTransform(s,0,0,s,0,0);g.fillStyle=pal().bg;g.fillRect(0,0,sp.W,sp.H);compose(canvasOut(g),sp.W,sp.H,{...sp.cur},{...pal()},sp.t,ST);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));save(fname('png'),blob);};
+$('sSvg').onclick=()=>{const o=svgOut(),W=Math.round(sp.W),H=Math.round(sp.H);compose(o,sp.W,sp.H,{...sp.cur},{...pal()},sp.t,ST);
+  save(fname('svg'),`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="100%" height="100%" fill="${pal().bg}"/>${o.P.join('')}</svg>`);};
+(async()=>{const use=window.claude&&window.claude.use;try{dl=use?await use('downloads'):null;}catch(e){dl=null;}
+})();
+
+renderOrder();syncS();sizeStudio();
+})();
+</script>
+
+</body>
+</html>
